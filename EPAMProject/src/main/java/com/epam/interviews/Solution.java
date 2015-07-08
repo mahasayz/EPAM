@@ -14,6 +14,12 @@ public class Solution {
 	private List<Account> accounts = new ArrayList<Account>();
 	private static Map<String, String> groups = new HashMap<String, String>();
 	
+	private static final String TAB_DELIMITER = "\\t";
+	private static final String COLON_DELIMITER = ":";
+
+	private double sum = 0;
+	private int counter = 0;
+	
 	public void parseFile(String filename, String delimiter) {
 		BufferedReader br = null;
 		
@@ -45,9 +51,22 @@ public class Solution {
 		
 	}
 	
+	public void calculateSumAndReset(Account previous) {
+		
+		Double newSum = sum/counter;
+		newSum = newSum / ExchangeRate.getRate("EUR");
+		if (previous.getCountry() == null || previous.getCountry().equals(""))
+			groups.put(previous.getCity()+COLON_DELIMITER+previous.getCreditRating(), newSum.toString());
+		else
+			groups.put(previous.getCountry()+COLON_DELIMITER+previous.getCreditRating(), newSum.toString());
+		counter = 0;
+		sum = 0;
+		
+	}
+	
 	public void run() {
 		
-		parseFile("FILE.DAT", "\\t");
+		parseFile("FILE.DAT", TAB_DELIMITER);
 		
 		ExchangeRate.addCurrency("USD", 1.00);
 		ExchangeRate.addCurrency("GBP", 1.654);
@@ -55,55 +74,29 @@ public class Solution {
 		ExchangeRate.addCurrency("EUR", 1.35);
 		
 		Collections.sort(accounts, Account.COMPARATOR_LOGIC);
-		double sum = 0;
-		int counter = 0;
 		Account previous = null;
 		for (Account account : accounts) {
 			if (account.getCountry() == null || account.getCountry().equals("")) {
-				if (previous == null || (previous.getCity().equals(account.getCity()) && previous.getCreditRating().equals(account.getCreditRating()))) {
-					previous = account;
-					sum += account.getAmount();
-					counter++;
-				} else {
-					Double newSum = sum/counter;
-					newSum = (newSum * ExchangeRate.getRate(previous.getCurrency())) / ExchangeRate.getRate("EUR");
-					if (previous.getCountry() == null || previous.getCountry().equals(""))
-						groups.put(previous.getCity()+":"+previous.getCreditRating(), newSum.toString());
-					else
-						groups.put(previous.getCountry()+":"+previous.getCreditRating(), newSum.toString());
-					counter = 0;
-					sum = 0;
-					previous = account;
-					sum += account.getAmount();
-					counter++;
+				if (!(previous == null || (previous.getCity().equals(account.getCity()) && previous.getCreditRating().equals(account.getCreditRating())))) {
+					calculateSumAndReset(previous);
 				}
 			} else {
-				if (previous == null || (previous.getCountry().equals(account.getCountry()) && previous.getCreditRating().equals(account.getCreditRating()))) {
-					previous = account;
-					sum += account.getAmount();
-					counter++;
-				} else {
-					Double newSum = sum/counter;
-					newSum = (newSum * ExchangeRate.getRate(previous.getCurrency())) / ExchangeRate.getRate("EUR");
-					if (previous.getCountry() == null || previous.getCountry().equals(""))
-						groups.put(previous.getCity()+":"+previous.getCreditRating(), newSum.toString());
-					else
-						groups.put(previous.getCountry()+":"+previous.getCreditRating(), newSum.toString());
-					sum = 0;
-					counter = 0;
-					previous = account;
-					sum += account.getAmount();
-					counter++;
+				if (!(previous == null || (previous.getCountry().equals(account.getCountry()) && previous.getCreditRating().equals(account.getCreditRating())))) {
+					calculateSumAndReset(previous);
 				}
 			}
+			previous = account;
+			sum += account.getAmount() * ExchangeRate.getRate(account.getCurrency());
+			counter++;
 		}
 		
+		calculateSumAndReset(previous);
+		
 		for (String key : groups.keySet()) {
-			String[] output = key.split(":");
+			String[] output = key.split(COLON_DELIMITER);
 			System.out.printf("Country/City : %s, Credit Rating : %s, Average : %s\n",
 					output[0], output[1],
 					ExchangeRate.getFormattedRate(Double.parseDouble(groups.get(key)), "EUR"));
 		}
 	}
-	
 }

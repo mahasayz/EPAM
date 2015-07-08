@@ -32,7 +32,7 @@ public class ExchangeRate {
 	public static double getRate(String name) {
 		return rates.get(name);
 	}
-
+	
 	public static String getFormattedRate(double rate, String currencyOutput) {
 		currentCurrency = Currency.getInstance(currencyOutput);
 		currencyFormatter.setCurrency(currentCurrency);
