@@ -1,5 +1,7 @@
 package com.epam.interviews;
 
+import java.util.Comparator;
+
 public class Account {
 
 	private int companyCode;
@@ -9,6 +11,8 @@ public class Account {
 	private String creditRating;
 	private String currency;
 	private double amount;
+	
+	public static final Comparator<Account> COMPARATOR_LOGIC = new CountryComparator();
 	
 	public Account (String companyCode, String account, String city, String country, String creditRating, String currency, String amount) {
 		this.companyCode = Integer.parseInt(companyCode);
@@ -84,6 +88,26 @@ public class Account {
 				this.getCreditRating() + "|" +
 				this.getCurrency() + "|" +
 				this.getAmount();
+	}
+	
+	private static class CountryComparator implements Comparator<Account> {
+		
+		@Override
+		public int compare(Account o1, Account o2) {
+			// TODO Auto-generated method stub
+			if (o1.getCountry() != null && o2.getCountry() != null) {
+				if (o1.getCountry().equals(o2.getCountry()))
+					return o1.getCreditRating().compareTo(o2.getCreditRating());
+				else
+					return o1.getCountry().compareTo(o2.getCountry());
+			} else {
+				if (o1.getCity().equals(o2.getCity()))
+					return o1.getCreditRating().compareTo(o2.getCreditRating());
+				else
+					return o1.getCity().compareTo(o2.getCity());
+			}
+		}
+		
 	}
 
 }
